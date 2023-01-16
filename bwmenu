@@ -49,12 +49,12 @@ DIR="$(dirname "$(readlink -f "$0")")"
 source "$DIR/lib-bwmenu"
 
 ask_password() {
-  mpw=$(printf '' | rofi -dmenu -p "Master Password" -password -l 0 ${ROFI_OPTIONS[@]}) || exit $?
+  mpw=$(printf '' | rofi -dmenu -p "Master Password" -password -l 0 "${ROFI_OPTIONS[@]}") || exit $?
   echo "$mpw" | bw unlock --raw || exit_error $? "Could not unlock vault"
 }
 
 get_session_key() {
-  if [ $AUTO_LOCK -eq 0 ]; then
+  if [ "$AUTO_LOCK" -eq 0 ]; then
     keyctl purge user bw_session &>/dev/null
     BW_HASH=$(ask_password)
   else
@@ -63,9 +63,9 @@ get_session_key() {
       [[ -z "$session" ]] && exit_error 1 "Could not unlock vault"
       key_id=$(echo "$session" | keyctl padd user bw_session @u)
     fi
-    
-    if [ $AUTO_LOCK -gt 0 ]; then
-      keyctl timeout "$key_id" $AUTO_LOCK
+
+    if [ "$AUTO_LOCK" -gt 0 ]; then
+      keyctl timeout "$key_id" "$AUTO_LOCK"
     fi
     BW_HASH=$(keyctl pipe "$key_id")
   fi
@@ -83,7 +83,7 @@ exit_error() {
   local code="$1"
   local message="$2"
 
-  rofi -e "$message" ${ROFI_OPTIONS[@]}
+  rofi -e "$message" "${ROFI_OPTIONS[@]}"
   exit "$code"
 }
 
@@ -92,21 +92,21 @@ exit_error() {
 rofi_menu() {
 
   actions=(
-    -kb-custom-1 $KB_SYNC
-    -kb-custom-2 $KB_NAMESEARCH
-    -kb-custom-3 $KB_URLSEARCH
-    -kb-custom-4 $KB_FOLDERSELECT
-    -kb-custom-8 $KB_TOTPCOPY
-    -kb-custom-9 $KB_LOCK
+    -kb-custom-1 "$KB_SYNC"
+    -kb-custom-2 "$KB_NAMESEARCH"
+    -kb-custom-3 "$KB_URLSEARCH"
+    -kb-custom-4 "$KB_FOLDERSELECT"
+    -kb-custom-8 "$KB_TOTPCOPY"
+    -kb-custom-9 "$KB_LOCK"
   )
 
   msg="<b>$KB_SYNC</b>: sync | <b>$KB_URLSEARCH</b>: urls | <b>$KB_NAMESEARCH</b>: names | <b>$KB_FOLDERSELECT</b>: folders | <b>$KB_TOTPCOPY</b>: totp | <b>$KB_LOCK</b>: lock"
 
-  [[ ! -z "$AUTOTYPE_MODE" ]] && {
+  [[ -n "$AUTOTYPE_MODE" ]] && {
     actions+=(
-      -kb-custom-5 $KB_TYPEALL
-      -kb-custom-6 $KB_TYPEUSER
-      -kb-custom-7 $KB_TYPEPASS
+      -kb-custom-5 "$KB_TYPEALL"
+      -kb-custom-6 "$KB_TYPEUSER"
+      -kb-custom-7 "$KB_TYPEPASS"
     )
     msg+="
 <b>$KB_TYPEALL</b>: Type all  | <b>$KB_TYPEUSER</b>: Type user | <b>$KB_TYPEPASS</b>: Type pass"
@@ -440,7 +440,7 @@ Quick Actions:
   $KB_TYPEALL  Autotype the username and password [needs xdotool or ydotool]
   $KB_TYPEUSER  Autotype the username [needs xdotool or ydotool]
   $KB_TYPEPASS  Autotype the password [needs xdotool or ydotool]
-  
+
   $KB_LOCK  Lock your vault
 
 Examples:
@@ -495,6 +495,6 @@ parse_cli_arguments "$@"
 
 get_session_key
 select_autotype_command
-# select_copy_command
-# load_items
-# show_items
+select_copy_command
+load_items
+show_items
